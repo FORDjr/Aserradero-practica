@@ -1,0 +1,180 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+
+    background-color: transparent;
+    background-image: radial-gradient(#0000005b 1px, #e5e5f7 1px);
+    background-size: 30px 30px;
+    width: 100%;
+    height: 100%;
+}
+
+
+h1 {
+    text-align: center;
+    color: #444;
+    font-size: 2.5rem;
+    margin: 20px 0;
+}
+
+h2 {
+    text-align: center;
+    color: #666;
+    font-size: 1.8rem;
+    margin-top: 40px;
+}
+
+.main {
+    color: #444;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    min-height: 100%;
+}
+
+.diaMT {
+    display: flex;
+    gap: 15px; 
+    margin-top: 20px;
+}
+
+.cargar {
+    display: flex;
+    gap: 15px; 
+}
+
+.diaMT button {
+    cursor: pointer;
+    font-weight: 700;
+    transition: all 0.2s;
+    padding: 10px 20px;
+    border-radius: 100px;
+    background: #e8e8e8;
+    border: 1px solid unset;
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+  }
+  
+  .diaMT button:hover {
+    background: #c4e201;
+  }
+  
+  .diaMT button > svg {
+    width: 34px;
+    margin-left: 10px;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .diaMT button:hover svg {
+    transform: translateX(5px);
+  }
+  
+  .diaMT button:active {
+    transform: scale(0.95);
+  }
+
+.cargar button  {
+    background-color: #5a67d8;
+    width: 200px;
+    height: 100px;
+    color: white;
+    border: none;
+    padding: 30px 40px;
+    font-size: 1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #434190;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+pre {
+    background-color: #f4f4f9;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow-x: auto;
+    white-space: pre-wrap; 
+    margin-top: 20px;
+}
+
+.sdCards {
+    display: flex;
+    align-items: center;
+}
+
+/* Estilos para el formulario de carga */
+.file-upload-form {
+    width: fit-content;
+    height: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.file-upload-label input {
+    display: none;
+}
+.file-upload-label svg {
+    height: 50px;
+    fill: rgb(82, 82, 82);
+    margin-bottom: 20px;
+}
+.file-upload-label {
+    cursor: pointer;
+    background-color: #ddd;
+    padding: 30px 70px;
+    border-radius: 40px;
+    border: 2px dashed rgb(82, 82, 82);
+    box-shadow: 0px 0px 200px -50px rgba(0, 0, 0, 0.719);
+}
+.file-upload-design {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+.browse-button {
+    background-color: rgb(82, 82, 82);
+    padding: 5px 15px;
+    border-radius: 10px;
+    color: white;
+    transition: all 0.3s;
+}
+.browse-button:hover {
+    background-color: rgb(14, 14, 14);
+}
+.file-upload-label.dragging {
+    border-color: #00b4d8;
+    background-color: #caf0f8;
+    box-shadow: 0px 0px 20px rgba(0, 180, 216, 0.5);
+}
+
+.cargar {
+    border: 2px dashed #ccc;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cargar.dragging {
+    background-color: #f0f8ff; 
+    border-color: #007bff;
+  }
