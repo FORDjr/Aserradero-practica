@@ -8,7 +8,7 @@ const Jornadas = () => {
   const [fileContent, setFileContent] = useState('')
 
   return (
-    <main className="main">
+    <main className="mainJornadas">
       <h1>ASERRADERO </h1>
 
       <div className="diaMT">
