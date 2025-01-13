@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Jornadas from "./pages/Jornadas";
-import Tablas from "./pages/Tablas";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
+import Jornadas from './pages/Jornadas'
+import Tablas from './pages/Tablas'
 
 function App() {
   return (
@@ -10,7 +10,7 @@ function App() {
         <Route path="/Tablas" element={<Tablas />} />
       </Routes>
     </Router>
-  );
+  )
 }
 
-export default App;
+export default App
