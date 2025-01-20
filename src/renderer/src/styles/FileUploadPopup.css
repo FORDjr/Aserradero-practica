@@ -1,41 +1,64 @@
+/* FileUploadPopup.css */
+
 .popup-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 999; /* por delante del contenido */
 }
 
 .popup-content {
-  background: white;
-  padding: 20px;
+  background: #fff;
+  padding: 20px 30px;
   border-radius: 10px;
-  width: 400px;
+  width: 320px;
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  position: relative;
+  /* Animación simple de aparición */
+  animation: fadeIn 0.3s ease forwards;
 }
 
-.popup-content select {
-  margin: 10px 0;
+@keyframes fadeIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.popup-content h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+.file-input {
+  margin: 15px 0;
   padding: 5px;
   width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-.popup-content button {
-  margin-top: 20px;
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
+.close-button {
+  margin-top: 10px;
+  background-color: #0069d9;
+  color: #fff;
   border: none;
   border-radius: 5px;
+  padding: 8px 16px;
   cursor: pointer;
 }
 
-.popup-content button:hover {
-  background-color: #0056b3;
+.close-button:hover {
+  background-color: #0053aa;
 }

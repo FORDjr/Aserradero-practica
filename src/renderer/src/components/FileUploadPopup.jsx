@@ -1,57 +1,47 @@
-import React, { useState } from 'react'
-import DragAndDrop from '../components/DragAndDrop'
-import '../styles/FileUploadPopup.css'
+// FileUploadPopup.jsx
+import React from 'react';
+import '../styles/FileUploadPopup.css';
 
 const FileUploadPopup = ({ onClose, onFileRead }) => {
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [fileData, setFileData] = useState([])
-  const [selectedType, setSelectedType] = useState('')
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
-  const handleFileRead = (data) => {
-    setFileData(data) // Guarda los datos procesados
-  }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target.result;
+      // Separar en líneas no vacías
+      const lines = content.split('\n').filter((line) => line.trim());
 
-  const handleUpload = () => {
-    if (fileData.length > 0 && selectedType) {
-      const enrichedData = fileData.map((row) => ({
-        Fecha: row.dia, // Asumiendo que "dia" es la fecha
-        Hora: row.hora,
-        Corriente: row.corriente
-      }))
+      // Parsear cada línea
+      const data = lines
+        .map((line) => {
+          const [rawDate, rawTime, rawCurrent] = line.trim().split(/\s+/);
+          if (!rawDate || !rawTime || !rawCurrent) return null;
 
-      onFileRead(enrichedData, selectedType)
+          return {
+            dia: rawDate,
+            hora: rawTime,
+            corriente: parseFloat(rawCurrent),
+          };
+        })
+        .filter(Boolean);
 
-      onClose() // Cierra el pop-up
-    } else {
-      alert('Por favor selecciona un archivo válido y un tipo.')
-    }
-  }
+      console.log('[FileUploadPopup] Datos parseados:', data);
+      onFileRead(data);
+    };
+    reader.readAsText(file);
+  };
 
   return (
     <div className="popup-overlay">
       <div className="popup-content">
-        <h2>Subir Archivo</h2>
-        <label>
-          Seleccionar Tipo:
-          <select value={selectedType} onChange={(e) => setSelectedType(e.target.value)}>
-            <option value="">Selecciona...</option>
-            <option value="volteo">Volteo</option>
-            <option value="temperatura">Temperatura</option>
-            <option value="distancia">Distancia</option>
-          </select>
-        </label>
-
-        <DragAndDrop onFileRead={handleFileRead} />
-
-        <div style={{ marginTop: '20px' }}>
-          <button onClick={handleUpload} style={{ marginRight: '10px' }}>
-            Cargar
-          </button>
-          <button onClick={onClose}>Cerrar</button>
-        </div>
+        <h2>Cargar archivo</h2>
+        <input type="file" className="file-input" onChange={handleFileChange} />
+        <button className="close-button" onClick={onClose}>Cerrar</button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default FileUploadPopup
+export default FileUploadPopup;
