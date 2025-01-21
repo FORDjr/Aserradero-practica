@@ -115,7 +115,7 @@ body {
     grid-area: 3 / 3 / 4 / 6; /* fila 3, col 3..5 */
   }
   
-
+  
   @media (max-width: 992px) {
     .parent-grid {
       grid-template-columns: repeat(3, 1fr);

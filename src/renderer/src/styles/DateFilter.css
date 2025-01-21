@@ -49,7 +49,49 @@ input[type="date"].filter-input,
 input[type="time"].filter-input {
   min-width: 150px;
 }
+.smooth-control {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
 
+.smooth-slider {
+  -webkit-appearance: none;
+  width: 150px;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+}
+
+.smooth-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #0069d9;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.smooth-slider::-webkit-slider-thumb:hover {
+  background: #0053aa;
+}
+
+.smooth-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #0069d9;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: background 0.2s;
+}
+
+.smooth-slider::-moz-range-thumb:hover {
+  background: #0053aa;
+}
 /* Responsive */
 @media (max-width: 768px) {
   .filter-container {

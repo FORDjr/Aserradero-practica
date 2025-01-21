@@ -36,7 +36,7 @@ const SimpleTable = ({ data }) => {
             <tr key={idx}>
               <td>{row.dia}</td>
               <td>{row.hora}</td>
-              <td>{row.corriente}</td>
+              <td>{Number(row.corriente).toFixed(2)}</td>
             </tr>
           ))}
         </tbody>
