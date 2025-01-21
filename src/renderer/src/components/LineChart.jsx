@@ -1,5 +1,3 @@
-// SimpleLineChart.jsx
-import React from 'react'
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -27,26 +25,25 @@ const SimpleLineChart = ({ data }) => {
         data: data.map((item) => item.corriente),
         borderColor: 'blue',
         backgroundColor: 'rgba(0,0,255,0.2)',
-        tension: 0, // línea sin curvatura
-        pointRadius: 0 // sin marcadores
+        tension: 0.4, 
+        pointRadius: 0 
       }
     ]
   }
 
   const chartOptions = {
     responsive: true,
-    maintainAspectRatio: false, // clave para que el alto no dependa del ancho
+    maintainAspectRatio: false,
     scales: {
       x: {
-        // Título del eje X (opcional desactivarlo, si ya lo desactivaste no es necesario)
         title: {
-            display: false,
-            text: 'Hora'
-          },
+          display: false,
+          text: 'Hora'
+        },
         ticks: {
-            autoSkip: true,       // Salta automáticamente algunas etiquetas
-            maxTicksLimit: 10      // Máximo de ticks visibles (ajusta el número a tu gusto)
-          }
+          autoSkip: true,
+          maxTicksLimit: 10
+        }
       },
       y: {
         title: {

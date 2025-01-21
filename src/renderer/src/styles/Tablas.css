@@ -1,28 +1,21 @@
-/* Fuente base (opcional, ajusta a tu gusto) */
 body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
+    overflow-y: scroll;
   }
   
-  /* Contenedor general */
   .main-tablas {
     color: #222;
     width: 100vw;
-    max-width: 1600px;      /* Opcional: si quieres limitar el ancho en pantallas grandes */
+    max-width: 1600px;  
     margin: 15px auto;
     background-color: #fff;
     border-radius: 10px;
     padding: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  
-    /* Opcional: si temes que en pantallas muy pequeñas se corte en horizontal,
-       podrías permitir scroll horizontal con overflow-x: auto;
-       pero normalmente el responsive grid debe bastar. */
-    /* overflow-x: auto; */
   }
   
-  /* Header superior con título y botones */
   .header-tablas {
     display: flex;
     align-items: center;
@@ -41,7 +34,6 @@ body {
     gap: 10px;
   }
   
-  /* Estilos para botones */
   .primary-button,
   .secondary-button {
     border: none;
@@ -52,7 +44,6 @@ body {
     transition: background-color 0.3s;
   }
   
-  /* Botón principal */
   .primary-button {
     background-color: #0069d9;
     color: #fff;
@@ -62,7 +53,6 @@ body {
     background-color: #0053aa;
   }
   
-  /* Botón secundario */
   .secondary-button {
     background-color: #e2e6ea;
     color: #333;
@@ -72,7 +62,6 @@ body {
     background-color: #cfd3d6;
   }
   
-  /* GRID principal: 5 columnas en pantallas grandes */
   .parent-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr); 
@@ -81,8 +70,15 @@ body {
     width: 100%;
   }
   
-  /* Secciones/celdas del grid */
-  .down-left-grid,
+  .down-left-grid{
+    background-color: #f9f9f9;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    overflow: auto;
+    width: 100%;
+  }
+
   .grafic-one,
   .grafic-two,
   .grafic-three {
@@ -104,7 +100,7 @@ body {
   
   
   .down-left-grid {
-    grid-area: 1 / 1 / 4 / 3; /* filas 2..3, col 1..2 */
+    grid-area: 1 / 1 / 4 / 3; 
   }
   
   .grafic-one {
@@ -119,23 +115,13 @@ body {
     grid-area: 3 / 3 / 4 / 6; /* fila 3, col 3..5 */
   }
   
-  /* ------- MEDIA QUERIES para pantallas medianas y pequeñas ------- */
-  
-  /* En pantallas medianas (ej: max-width: 992px),
-     pasamos a 3 columnas para no forzar un ancho excesivo */
+
   @media (max-width: 992px) {
     .parent-grid {
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: auto;
     }
-  
-    /* Ajustamos las áreas con 3 columnas
-       - Ejemplo: la sección "up-left-grid" (fila 1..2, col 1..3) ahora podría
-         ser simplemente fila 1, col 1..2 para no ocuparlo todo, etc.
-       - Pero si no quieres complicarte mucho, puedes usar grid-area: auto
-         y dejar que se dispongan automáticamente. */
 
-  
     .down-left-grid {
       grid-area: auto;
     }
@@ -153,8 +139,7 @@ body {
     }
   }
   
-  /* En pantallas muy pequeñas (max-width: 768px),
-     pasamos a 1 columna para que sea todo vertical */
+
   @media (max-width: 768px) {
     .parent-grid {
       grid-template-columns: 1fr;

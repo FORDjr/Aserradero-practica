@@ -1,0 +1,67 @@
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 15px 20px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px;
+  border: 1px solid #e1e1e1;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filter-item label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+  min-width: 50px;
+}
+
+.filter-input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+}
+
+.filter-input:hover {
+  border-color: #0069d9;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #0069d9;
+  box-shadow: 0 0 0 3px rgba(0, 105, 217, 0.1);
+  background-color: #fff;
+}
+
+/* Estilos específicos para inputs de tipo date y time */
+input[type="date"].filter-input,
+input[type="time"].filter-input {
+  min-width: 150px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filter-container {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .filter-item {
+    width: 100%;
+  }
+
+  .filter-input {
+    flex: 1;
+  }
+}

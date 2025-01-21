@@ -1,19 +1,22 @@
-// Tablas.jsx
-import React, { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import SimpleTable from '../components/SimpleTable'
-import SimpleLineChart from '../components/SimpleLineChart'
+import SimpleTable from '../components/Table'
+import SimpleLineChart from '../components/LineChart'
 import FileUploadPopup from '../components/FileUploadPopup'
+import DateFilter from '../components/DateFilter'
 import '../styles/Tablas.css'
 
 const Tablas = () => {
   const [tableData, setTableData] = useState([])
   const [showPopup, setShowPopup] = useState(false)
+  const [filters, setFilters] = useState({
+    day: '',
+    timeFrom: '',
+    timeTo: ''
+  })
   const navigate = useNavigate()
 
-  // Se llama cuando se lee el archivo en FileUploadPopup
   const handleFileRead = (data) => {
-    console.log('[Tablas] handleFileRead, datos:', data)
     setTableData(data)
   }
 
@@ -21,9 +24,41 @@ const Tablas = () => {
     setShowPopup(!showPopup)
   }
 
+  const handleFilterChange = (filterType, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterType]: value
+    }))
+  }
+
+  const filteredData = useMemo(() => {
+    return tableData.filter((row) => {
+      let matchesDay = true
+      let matchesTimeRange = true
+  
+      if (filters.day) {
+        matchesDay = row.dia === filters.day
+      }
+  
+      if (filters.timeFrom || filters.timeTo) {
+        const [h, m, s] = row.hora.split(':')
+        const rowDate = new Date(1970, 0, 1, +h, +m, s ? +s : 0).getTime()
+  
+        const [fromH, fromM] = (filters.timeFrom || '00:00').split(':')
+        const fromDate = new Date(1970, 0, 1, +fromH, +fromM, 0).getTime()
+  
+        const [toH, toM] = (filters.timeTo || '23:59').split(':')
+        const toDate = new Date(1970, 0, 1, +toH, +toM, 59).getTime()
+  
+        matchesTimeRange = rowDate >= fromDate && rowDate <= toDate
+      }
+  
+      return matchesDay && matchesTimeRange
+    })
+  }, [tableData, filters])
+
   return (
     <div className="main-tablas">
-      {/* Encabezado con botones */}
       <div className="header-tablas">
         <h1>Panel de Datos</h1>
         <div className="header-buttons">
@@ -38,27 +73,23 @@ const Tablas = () => {
 
       {showPopup && <FileUploadPopup onClose={togglePopup} onFileRead={handleFileRead} />}
 
-      {/* Contenedor principal en Grid */}
+      <DateFilter onFilterChange={handleFilterChange} />
+
       <div className="parent-grid">
-        {/* Abajo a la izquierda (tabla) */}
         <div className="down-left-grid">
-          <h3>+</h3>
-          <SimpleTable data={tableData} />
+          <SimpleTable data={filteredData} />
         </div>
 
-        {/* Gráfico 1: arriba a la derecha */}
         <div className="grafic-one">
-          <SimpleLineChart data={tableData} />
+          <SimpleLineChart data={filteredData} />
         </div>
 
-        {/* Gráfico 2: fila intermedia a la derecha */}
         <div className="grafic-two">
-          <SimpleLineChart data={tableData} />
+          <SimpleLineChart data={filteredData} />
         </div>
 
-        {/* Gráfico 3: fila inferior a la derecha */}
         <div className="grafic-three">
-          <SimpleLineChart data={tableData} />
+          <SimpleLineChart data={filteredData} />
         </div>
       </div>
     </div>

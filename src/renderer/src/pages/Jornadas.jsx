@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import DragAndDrop from '../components/DragAndDrop'
 import TablasSvgButton from '../assets/TablasSvgButton'
 import '../styles/Jornadas.css'
 
@@ -20,26 +19,19 @@ const Jornadas = () => {
       </div>
       <div className="sdCards">
         <div className="SDVolt">
-          <h2>VOLTEOS</h2>
-          <DragAndDrop
-            onFileRead={(content) => setFileContent(content)} // Callback para actualizar el estado
-          />
+          <h2>VOLTEOS - </h2>
+          
+
         </div>
         <div className="SDTemp">
-          <h2>TEMPERATURA</h2>
-          <DragAndDrop
-            onFileRead={(content) => setFileContent(content)} // Callback para actualizar el estado
-          />
+          <h2> - TEMPERATURA -</h2>
+
         </div>
         <div className="SDDist">
-          <h2>DISTANCIA</h2>
-          <DragAndDrop
-            onFileRead={(content) => setFileContent(content)} // Callback para actualizar el estado
-          />
+          <h2>- DISTANCIA </h2>
+
         </div>
       </div>
-
-      <pre id="contenido">{fileContent}</pre>
     </main>
   )
 }
