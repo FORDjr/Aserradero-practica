@@ -34,7 +34,7 @@ const DateFilter = ({ onFilterChange, smoothValue, onSmoothChange }) => {
       </div>
 
       <div className="filter-item smooth-control">
-        <label htmlFor="smoothFilter">Suavizado: {smoothValue === 0 ? 'Off' : smoothValue}</label>
+        <label htmlFor="smoothFilter">Suavizado: {smoothValue}</label>
         <input
           type="range"
           id="smoothFilter"

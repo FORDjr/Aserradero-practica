@@ -25,7 +25,7 @@ const SimpleLineChart = ({ data }) => {
         data: data.map((item) => item.corriente),
         borderColor: 'blue',
         backgroundColor: 'rgba(0,0,255,0.2)',
-        tension: 0.4, 
+        tension: 0.2, 
         pointRadius: 0 
       }
     ]
