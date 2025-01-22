@@ -1,3 +1,4 @@
+// LineChart.jsx
 import { Line } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
@@ -12,7 +13,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
-const SimpleLineChart = ({ data }) => {
+const SimpleLineChart = ({ data, yKey = 'corriente' }) => {
   if (!data || data.length === 0) {
     return <p>No hay datos para graficar</p>
   }
@@ -21,12 +22,12 @@ const SimpleLineChart = ({ data }) => {
     labels: data.map((item) => item.hora),
     datasets: [
       {
-        label: 'Corriente',
-        data: data.map((item) => item.corriente),
+        label: yKey,
+        data: data.map((item) => item[yKey]),
         borderColor: 'blue',
         backgroundColor: 'rgba(0,0,255,0.2)',
-        tension: 0.4, 
-        pointRadius: 0 
+        tension: 0.4,
+        pointRadius: 0
       }
     ]
   }
@@ -61,7 +62,7 @@ const SimpleLineChart = ({ data }) => {
   }
 
   return (
-    <div style={{ width: '100vw', height: '200px', margin: '0 auto' }}>
+    <div style={{ width: '100%', height: '200px', margin: '0 auto' }}>
       <Line data={chartData} options={chartOptions} />
     </div>
   )

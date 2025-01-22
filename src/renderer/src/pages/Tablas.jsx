@@ -1,3 +1,4 @@
+// Tablas.jsx
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SimpleTable from '../components/Table'
@@ -6,13 +7,14 @@ import FileUploadPopup from '../components/FileUploadPopup'
 import DateFilter from '../components/DateFilter'
 import '../styles/Tablas.css'
 
+// Nuevas funciones:
+import { lowPassFilter, detectTablasYcortes } from '../utils/filterAndDetect'
+
 const Tablas = () => {
   const [tableData, setTableData] = useState([])
+  const [tablas, setTablas] = useState([]) // aquí guardamos la info de inicio/fin de tablas/cortes
+
   const [showPopup, setShowPopup] = useState(false)
-  const [rawData, setRawData] = useState([])
-
-  const SMOOTHING_WINDOW = 20
-
   const [filters, setFilters] = useState({
     day: '',
     timeFrom: '',
@@ -32,32 +34,22 @@ const Tablas = () => {
     }))
   }
 
-  const smoothData = (data, windowSize = 5) => {
-    if (!data || data.length === 0) return []
-    if (windowSize <= 0) return data
-
-    const smoothed = data.map((row, index) => {
-      const start = Math.max(0, index - Math.floor(windowSize / 2))
-      const end = Math.min(data.length - 1, index + Math.floor(windowSize / 2))
-      const windowSlice = data.slice(start, end + 1)
-      const sum = windowSlice.reduce((acc, cur) => acc + cur.corriente, 0)
-      const avg = sum / windowSlice.length
-      return {
-        ...row,
-        corriente: avg
-      }
-    })
-    return smoothed
+  // Al subir el archivo, aplicamos:
+  // 1) Filtro lowpass
+  // 2) Detectar tablas/cortes => guardamos el array anotado en tableData
+  // 3) Guardamos la info de tablas en setTablas
+  const handleFileRead = (rawData) => {
+    // 1) Filtro
+    const alpha = 0.05
+    const filtrados = lowPassFilter(rawData, alpha)
+  
+    // 2) Detección
+    const { annotatedData, tablas } = detectTablasYcortes(filtrados)
+  
+    setTableData(annotatedData)
+    setTablas(tablas)
   }
 
-  const handleFileRead = (data) => {
-    setRawData(data)
-    // Aplicar suavizado fijo de 20
-    const processedData = smoothData(data, SMOOTHING_WINDOW)
-    setTableData(processedData)
-  }
-
-  // Filtrado por día y rango de hora
   const filteredData = useMemo(() => {
     return tableData.filter((row) => {
       let matchesDay = true
@@ -97,27 +89,83 @@ const Tablas = () => {
           </button>
         </div>
       </div>
-
       {showPopup && <FileUploadPopup onClose={togglePopup} onFileRead={handleFileRead} />}
-
       <DateFilter onFilterChange={handleFilterChange} />
-
       <div className="parent-grid">
         <div className="down-left-grid">
           <SimpleTable data={filteredData} />
         </div>
-
         <div className="grafic-one">
-          <SimpleLineChart data={filteredData} />
+          {/* Graficar corrienteFiltrada para ver el efecto del filtro y el estado */}
+          <SimpleLineChart data={filteredData} yKey="corrienteFiltrada" />
         </div>
-
         <div className="grafic-two">
-          <SimpleLineChart data={filteredData} />
+          {/* Si quieres comparar vs la señal bruta */}
+          <SimpleLineChart data={filteredData} yKey="corriente" />
         </div>
-
         <div className="grafic-three">
-          <SimpleLineChart data={filteredData} />
+          {/* Otra vista de la corriente filtrada o tu preferencia */}
+          <SimpleLineChart data={filteredData} yKey="corrienteFiltrada" />
         </div>
+      </div>
+      <h2>Resumen de Tablas y Cortes</h2>
+      <div style={{ margin: '1rem' }}>
+        {tablas.length === 0 ? (
+          <p>No hay tablas detectadas</p>
+        ) : (
+          tablas.map((t) => {
+            const tablaHoraInicio = filteredData[t.startIndex]?.hora || ''
+            const tablaHoraFin = filteredData[t.endIndex]?.hora || ''
+
+            return (
+              <div
+                key={t.tablaId}
+                style={{
+                  marginBottom: '2rem',
+                  padding: '1.5rem',
+                  border: '2px solid #0069d9',
+                  borderRadius: '8px',
+                  backgroundColor: '#f8f9fa'
+                }}
+              >
+                <h3 style={{ marginBottom: '1rem', color: '#0069d9' }}>
+                  TABLA #{t.tablaId} (hora inicio: {tablaHoraInicio} - hora fin: {tablaHoraFin})
+                </h3>
+
+                {t.cortes.length === 0 ? (
+                  <p>No se detectaron cortes en esta tabla</p>
+                ) : (
+                  <div style={{ marginLeft: '1.5rem' }}>
+                    <h4 style={{ marginBottom: '0.5rem', color: '#666' }}>Cortes detectados:</h4>
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      {t.cortes.map((c) => {
+                        const corteHoraInicio = filteredData[c.startIndex]?.hora || ''
+                        const corteHoraFin = filteredData[c.endIndex]?.hora || ''
+
+                        return (
+                          <li
+                            key={c.corteId}
+                            style={{
+                              marginBottom: '0.5rem',
+                              padding: '0.75rem',
+                              backgroundColor: '#fff',
+                              borderRadius: '4px',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                              borderLeft: '3px solid #28a745'
+                            }}
+                          >
+                            CORTE #{c.corteId} (hora inicio: {corteHoraInicio} - hora fin:{' '}
+                            {corteHoraFin})
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
