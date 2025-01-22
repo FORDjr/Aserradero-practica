@@ -1,8 +1,8 @@
 import '../styles/DateFilter.css'
-const DateFilter = ({ onFilterChange, smoothValue, onSmoothChange }) => {
+
+const DateFilter = ({ onFilterChange }) => {
   return (
     <div className="filter-container">
-      {/* Filtros existentes */}
       <div className="filter-item">
         <label htmlFor="dayFilter">Día: </label>
         <input
@@ -30,19 +30,6 @@ const DateFilter = ({ onFilterChange, smoothValue, onSmoothChange }) => {
           step="1"
           onChange={(e) => onFilterChange('timeTo', e.target.value)}
           className="filter-input"
-        />
-      </div>
-
-      <div className="filter-item smooth-control">
-        <label htmlFor="smoothFilter">Suavizado: {smoothValue === 0 ? 'Off' : smoothValue}</label>
-        <input
-          type="range"
-          id="smoothFilter"
-          min="0"
-          max="30"
-          value={smoothValue}
-          onChange={(e) => onSmoothChange(Number(e.target.value))}
-          className="smooth-slider"
         />
       </div>
     </div>
