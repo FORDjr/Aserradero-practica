@@ -10,12 +10,15 @@ const Tablas = () => {
   const [tableData, setTableData] = useState([])
   const [showPopup, setShowPopup] = useState(false)
   const [rawData, setRawData] = useState([])
-  const [smoothValue, setSmoothValue] = useState(5)
+
+  const SMOOTHING_WINDOW = 20
+
   const [filters, setFilters] = useState({
     day: '',
     timeFrom: '',
     timeTo: ''
   })
+
   const navigate = useNavigate()
 
   const togglePopup = () => {
@@ -31,8 +34,8 @@ const Tablas = () => {
 
   const smoothData = (data, windowSize = 5) => {
     if (!data || data.length === 0) return []
-    if (windowSize === 0) return data
-  
+    if (windowSize <= 0) return data
+
     const smoothed = data.map((row, index) => {
       const start = Math.max(0, index - Math.floor(windowSize / 2))
       const end = Math.min(data.length - 1, index + Math.floor(windowSize / 2))
@@ -46,22 +49,15 @@ const Tablas = () => {
     })
     return smoothed
   }
-  
+
   const handleFileRead = (data) => {
     setRawData(data)
-    // Si smoothValue es 0, usar datos sin procesar
-    const processedData = smoothValue === 0 ? data : smoothData(data, smoothValue)
+    // Aplicar suavizado fijo de 20
+    const processedData = smoothData(data, SMOOTHING_WINDOW)
     setTableData(processedData)
   }
 
-  const handleSmoothChange = (value) => {
-    setSmoothValue(value)
-    if (rawData.length > 0) {
-      const smoothedData = smoothData(rawData, value)
-      setTableData(smoothedData)
-    }
-  }
-
+  // Filtrado por día y rango de hora
   const filteredData = useMemo(() => {
     return tableData.filter((row) => {
       let matchesDay = true
@@ -72,15 +68,12 @@ const Tablas = () => {
       }
 
       if (filters.timeFrom || filters.timeTo) {
-        // Separar hora:minuto:segundo de la hora actual
         const [h, m, s] = row.hora.split(':').map(Number)
         const rowDate = new Date(1970, 0, 1, h, m, s || 0).getTime()
 
-        // Procesar hora inicial
         const [fromH, fromM, fromS = '0'] = (filters.timeFrom || '00:00:00').split(':')
         const fromDate = new Date(1970, 0, 1, +fromH, +fromM, +fromS).getTime()
 
-        // Procesar hora final
         const [toH, toM, toS = '59'] = (filters.timeTo || '23:59:59').split(':')
         const toDate = new Date(1970, 0, 1, +toH, +toM, +toS).getTime()
 
@@ -107,11 +100,8 @@ const Tablas = () => {
 
       {showPopup && <FileUploadPopup onClose={togglePopup} onFileRead={handleFileRead} />}
 
-      <DateFilter
-        onFilterChange={handleFilterChange}
-        smoothValue={smoothValue}
-        onSmoothChange={handleSmoothChange}
-      />
+      <DateFilter onFilterChange={handleFilterChange} />
+
       <div className="parent-grid">
         <div className="down-left-grid">
           <SimpleTable data={filteredData} />
