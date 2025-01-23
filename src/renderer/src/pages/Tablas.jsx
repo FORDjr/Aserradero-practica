@@ -12,7 +12,8 @@ import { lowPassFilter, detectTablasYcortes } from '../utils/filterAndDetect'
 
 const Tablas = () => {
   const [tableData, setTableData] = useState([])
-  const [tablas, setTablas] = useState([]) // aquí guardamos la info de inicio/fin de tablas/cortes
+  const [tablas, setTablas] = useState([]) // Aquí guardamos la info de inicio/fin de tablas/cortes
+  const [umbralOFF, setUmbralOFF] = useState(null) // Para visualizar el umbral dinámico
 
   const [showPopup, setShowPopup] = useState(false)
   const [filters, setFilters] = useState({
@@ -40,14 +41,15 @@ const Tablas = () => {
   // 3) Guardamos la info de tablas en setTablas
   const handleFileRead = (rawData) => {
     // 1) Filtro
-    const alpha = 0.05
+    const alpha = 0.08
     const filtrados = lowPassFilter(rawData, alpha)
-  
+
     // 2) Detección
-    const { annotatedData, tablas } = detectTablasYcortes(filtrados)
-  
+    const { annotatedData, tablas, THRESH_OFF } = detectTablasYcortes(filtrados)
+
     setTableData(annotatedData)
     setTablas(tablas)
+    setUmbralOFF(THRESH_OFF)
   }
 
   const filteredData = useMemo(() => {
@@ -100,7 +102,7 @@ const Tablas = () => {
           <SimpleLineChart data={filteredData} yKey="corrienteFiltrada" />
         </div>
         <div className="grafic-two">
-          {/* Si quieres comparar vs la señal bruta */}
+          {/* Comparar vs la señal bruta */}
           <SimpleLineChart data={filteredData} yKey="corriente" />
         </div>
         <div className="grafic-three">
@@ -116,7 +118,15 @@ const Tablas = () => {
           tablas.map((t) => {
             const tablaHoraInicio = filteredData[t.startIndex]?.hora || ''
             const tablaHoraFin = filteredData[t.endIndex]?.hora || ''
-
+            const horaASegundos = (hora) => {
+              const [h, m, s] = hora.split(':').map(Number)
+              return h * 3600 + m * 60 + s
+            }
+            const formatoDuracion = (segundos) => {
+              const minutos = Math.floor(segundos / 60)
+              const segs = segundos % 60
+              return `${minutos}:${segs.toString().padStart(2, '0')}`
+            }
             return (
               <div
                 key={t.tablaId}
@@ -129,7 +139,9 @@ const Tablas = () => {
                 }}
               >
                 <h3 style={{ marginBottom: '1rem', color: '#0069d9' }}>
-                  TABLA #{t.tablaId} (hora inicio: {tablaHoraInicio} - hora fin: {tablaHoraFin})
+                  TABLA #{t.tablaId} (hora inicio: {tablaHoraInicio} - hora fin: {tablaHoraFin} -
+                  duración:{' '}
+                  {formatoDuracion(horaASegundos(tablaHoraFin) - horaASegundos(tablaHoraInicio))})
                 </h3>
 
                 {t.cortes.length === 0 ? (
@@ -154,8 +166,18 @@ const Tablas = () => {
                               borderLeft: '3px solid #28a745'
                             }}
                           >
-                            CORTE #{c.corteId} (hora inicio: {corteHoraInicio} - hora fin:{' '}
-                            {corteHoraFin})
+                            CORTE #{c.corteId}
+                            <br />
+                            Inicio: {corteHoraInicio}
+                            <br />
+                            Fin: {corteHoraFin}
+                            <br />
+                            Duración:{' '}
+                            {formatoDuracion(
+                              horaASegundos(corteHoraFin) - horaASegundos(corteHoraInicio)
+                            )}
+                            <br />
+                            Corriente máxima: {c.maxCorriente.toFixed(2)} A
                           </li>
                         )
                       })}

@@ -1,9 +1,9 @@
-// utils/filterAndDetect.js
+// filterAndDetect.jsx
 
 /**
  * Filtro Lowpass simple con factor alpha.
  *   filtered[0] = raw[0]
- *   filtered[i] = alpha*raw[i] + (1-alpha)*filtered[i-1]
+ *   filtered[i] = alpha * raw[i] + (1 - alpha) * filtered[i - 1]
  */
 export function lowPassFilter(data, alpha = 0.05) {
   if (!data || data.length === 0) return []
@@ -23,13 +23,36 @@ export function lowPassFilter(data, alpha = 0.05) {
 }
 
 /**
- * Paso 1: Detección de TABLAS (ON) vs OFF, usando un umbral global muy bajo (THRESH_OFF).
+ * Paso 1: Detección de TABLAS (ON) vs OFF, usando el método del mayor salto para definir el umbral.
  *         Añadimos un "duracionMinimaTabla" para evitar tablas muy cortas.
  */
-function detectTablas(data) {
-  const THRESH_OFF = 1 // Se considera OFF por debajo de 1 A
-  const duracionMinimaTabla = 5 // en muestras (asumiendo 1 muestra/segundo => 5 seg)
+function detectTablasDinamico(data) {
+  if (!data || data.length === 0) return { tablas: [], THRESH_OFF: null }
 
+  // 1) Obtener todas las corrientes filtradas
+  const corrientes = data.map((d) => d.corrienteFiltrada)
+
+  // 2) Ordenar las corrientes de menor a mayor
+  const sorted = [...corrientes].sort((a, b) => a - b)
+
+  // 3) Calcular las diferencias entre valores consecutivos
+  const diferencias = sorted.slice(1).map((val, idx) => val - sorted[idx])
+
+  // 4) Encontrar el índice del mayor salto
+  let maxDif = -Infinity
+  let maxIndex = -1
+  diferencias.forEach((diff, idx) => {
+    if (diff > maxDif) {
+      maxDif = diff
+      maxIndex = idx
+    }
+  })
+
+  // 5) Definir el umbral como el punto medio del mayor salto
+  const THRESH_OFF = (sorted[maxIndex] + sorted[maxIndex + 1]) / 2
+
+  // 6) Detectar tablas basadas en el umbral dinámico
+  const duracionMinimaTabla = 5 // en muestras (asumiendo 1 muestra/segundo => 5 seg)
   let tablas = []
   let inTable = false
   let startIndex = 0
@@ -37,14 +60,15 @@ function detectTablas(data) {
   for (let i = 0; i < data.length; i++) {
     const c = data[i].corrienteFiltrada
 
-    // Si no estamos en tabla y la corriente >= THRESH_OFF => inicia tabla
+    // Iniciar tabla cuando la corriente supera el umbral OFF
     if (!inTable && c >= THRESH_OFF) {
       inTable = true
       startIndex = i
     }
-    // Si estamos en tabla y la corriente baja de THRESH_OFF => fin de tabla
+
+    // Finalizar tabla cuando la corriente baja del umbral OFF
     if (inTable && c < THRESH_OFF) {
-      const length = i - startIndex // cuántas muestras duró la tabla
+      const length = i - startIndex
       if (length >= duracionMinimaTabla) {
         tablas.push({ startIndex, endIndex: i - 1 })
       }
@@ -52,7 +76,7 @@ function detectTablas(data) {
     }
   }
 
-  // Si al final seguimos en ON, cerramos la última tabla
+  // Manejar caso donde la última muestra sigue en tabla
   if (inTable) {
     const length = data.length - startIndex
     if (length >= duracionMinimaTabla) {
@@ -60,12 +84,12 @@ function detectTablas(data) {
     }
   }
 
-  return tablas
+  return { tablas, THRESH_OFF }
 }
 
 /**
- * Paso 2: Dentro de UNA tabla, calculamos su media y desviación estándar (corrienteFiltrada).
- *         Definimos umbralCorte = media + k * stdDev.
+ * Paso 2: Dentro de UNA tabla, calculamos su baseline (mediana) y desviación estándar (corrienteFiltrada).
+ *         Definimos umbralCorte = baseline + k * stdDev.
  *         Añadimos "duracionMinimaCorte" para descartar cortes muy cortos.
  *
  * @param dataTabla subset de filas que pertenecen a la tabla
@@ -74,68 +98,83 @@ function detectTablas(data) {
 function detectCortesDentroDeTabla(dataTabla, offset = 0) {
   if (!dataTabla || dataTabla.length === 0) return []
 
-  // 1) Calcular media y desviación estándar local
+  // 1) Calcular todas las corrientes filtradas dentro de la tabla
   const valores = dataTabla.map((d) => d.corrienteFiltrada)
   const n = valores.length
-  const mean = valores.reduce((a, b) => a + b, 0) / n
-  const variance = valores.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / n
+
+  // 2) Calcular la mediana para el baseline
+  const sorted = [...valores].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+
+  // 3) Calcular la desviación estándar
+  const variance = valores.reduce((sum, val) => sum + Math.pow(val - median, 2), 0) / n
   const stdDev = Math.sqrt(variance)
 
-  // Ajusta k para tu señal. Cuanto mayor sea, menos sensible a picos.
-  const k = 0.6
-  const umbralCorte = mean + k * stdDev
+  // 4) Definir umbrales para cortes
+  const umbralCorte = median + 1.0 * stdDev // Ajusta este valor según tus necesidades
 
-  // 2) Detectar intervalos "CUTTING" = (corriente >= umbralCorte)
-  //    con duración mínima.
-  const duracionMinimaCorte = 3 // en muestras (3 seg, si 1 muestra = 1 seg)
+  // 5) Parámetros para detección de cortes
+  const duracionMinimaCorte = 3 // en muestras
+  const tiempoMinEntreCortes = 5 // Mínimo tiempo entre cortes
   let cortes = []
 
-  let inCut = false
-  let cutStart = 0
+  let inCorte = false
+  let corteStart = 0
+  let samplesAboveThreshold = 0
+  let ultimoCorteEnd = -tiempoMinEntreCortes // Para controlar tiempo entre cortes
 
   for (let i = 0; i < n; i++) {
-    const c = dataTabla[i].corrienteFiltrada
-    // Inicia corte
-    if (!inCut && c >= umbralCorte) {
-      inCut = true
-      cutStart = i
-    }
-    // Finaliza corte
-    if (inCut && c < umbralCorte) {
-      const length = i - cutStart
-      if (length >= duracionMinimaCorte) {
-        // Corte lo suficientemente largo
-        cortes.push({
-          startIndex: offset + cutStart,
-          endIndex: offset + (i - 1)
-        })
+    const currentVal = valores[i]
+
+    if (currentVal >= umbralCorte) {
+      samplesAboveThreshold += 1
+      if (!inCorte && samplesAboveThreshold >= duracionMinimaCorte) {
+        inCorte = true
+        corteStart = i - duracionMinimaCorte + 1
       }
-      inCut = false
+    } else {
+      if (inCorte) {
+        const corteEnd = i - 1
+        const corteMax = Math.max(...valores.slice(corteStart, corteEnd + 1))
+        cortes.push({
+          startIndex: offset + corteStart,
+          endIndex: offset + corteEnd,
+          maxCorriente: corteMax
+        })
+        ultimoCorteEnd = i
+      }
+      inCorte = false
+      samplesAboveThreshold = 0
     }
   }
 
-  // Si quedó un corte abierto al final
-  if (inCut) {
-    const length = n - cutStart
-    if (length >= duracionMinimaCorte) {
-      cortes.push({
-        startIndex: offset + cutStart,
-        endIndex: offset + (n - 1)
-      })
-    }
+  // Manejar corte activo al final de los datos
+  if (inCorte) {
+    const corteEnd = n - 1
+    const corteMax = Math.max(...valores.slice(corteStart, corteEnd + 1))
+    cortes.push({
+      startIndex: offset + corteStart,
+      endIndex: offset + corteEnd,
+      maxCorriente: corteMax
+    })
   }
 
   return cortes
 }
 
-
+/**
+ * Función principal para detectar tablas y cortes con umbrales dinámicos.
+ *
+ * @param data Datos filtrados
+ */
 export function detectTablasYcortes(data) {
   if (!data || data.length === 0) {
     return { annotatedData: [], tablas: [] }
   }
 
-  // 1) Detectar tablas
-  const tablasDetectadas = detectTablas(data)
+  // 1) Detectar tablas con umbral dinámico basado en el mayor salto
+  const { tablas: tablasDetectadas, THRESH_OFF } = detectTablasDinamico(data)
 
   // 2) Para cada tabla, detectar cortes internos
   const tablas = []
@@ -174,5 +213,5 @@ export function detectTablasYcortes(data) {
     })
   })
 
-  return { annotatedData, tablas }
+  return { annotatedData, tablas, THRESH_OFF }
 }
