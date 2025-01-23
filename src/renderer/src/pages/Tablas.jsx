@@ -1,4 +1,5 @@
 // Tablas.jsx
+
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SimpleTable from '../components/Table'
@@ -48,13 +49,14 @@ const Tablas = () => {
     // 2) Detección
     const { annotatedData, tablas: tablasDetectadas, THRESH_OFF } = detectTablasYcortes(filtrados)
 
-    // Añadir timestamp a cada fila
-    const annotatedDataWithTimestamp = annotatedData.map((row) => ({
+    // Añadir originalIndex a cada fila
+    const annotatedDataWithOriginalIndex = annotatedData.map((row, index) => ({
       ...row,
-      timestamp: parseHoraToTimestamp(row.hora)
+      timestamp: parseHoraToTimestamp(row.hora),
+      originalIndex: index
     }))
 
-    setTableData(annotatedDataWithTimestamp)
+    setTableData(annotatedDataWithOriginalIndex)
     setTablas(tablasDetectadas)
     setUmbralOFF(THRESH_OFF)
   }
@@ -83,6 +85,19 @@ const Tablas = () => {
       return matchesDay && matchesTimeRange
     })
   }, [tableData, filters])
+
+  const filteredTablas = useMemo(() => {
+    return tablas
+      .filter(t => 
+        filteredData.some(row => row.originalIndex === t.startIndex) &&
+        filteredData.some(row => row.originalIndex === t.endIndex)
+      )
+      .map(t => ({
+        ...t,
+        horaInicio: tableData[t.startIndex]?.hora,
+        horaFin: tableData[t.endIndex]?.hora
+      }))
+  }, [tablas, filteredData, tableData])
 
   return (
     <div className="main-tablas">
@@ -116,7 +131,7 @@ const Tablas = () => {
           <SimpleLineChart
             data={filteredData}
             yKey="corrienteFiltrada"
-            tablas={tablas}
+            tablas={filteredTablas}
             annotate={true}
           />
         </div>
