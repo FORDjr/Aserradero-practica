@@ -10,18 +10,22 @@ import '../styles/Tablas.css'
 // Nuevas funciones:
 import { lowPassFilter, detectTablasYcortes } from '../utils/filterAndDetect'
 
+// Función para convertir 'hora' a timestamp (segundos desde medianoche)
+const parseHoraToTimestamp = (hora) => {
+  const [h, m, s] = hora.split(':').map(Number)
+  return h * 3600 + m * 60 + (s || 0)
+}
+
 const Tablas = () => {
   const [tableData, setTableData] = useState([])
-  const [tablas, setTablas] = useState([]) // Aquí guardamos la info de inicio/fin de tablas/cortes
-  const [umbralOFF, setUmbralOFF] = useState(null) // Para visualizar el umbral dinámico
-
+  const [tablas, setTablas] = useState([])
+  const [umbralOFF, setUmbralOFF] = useState(null)
   const [showPopup, setShowPopup] = useState(false)
   const [filters, setFilters] = useState({
     day: '',
     timeFrom: '',
     timeTo: ''
   })
-
   const navigate = useNavigate()
 
   const togglePopup = () => {
@@ -29,10 +33,7 @@ const Tablas = () => {
   }
 
   const handleFilterChange = (filterType, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterType]: value
-    }))
+    setFilters((prev) => ({ ...prev, [filterType]: value }))
   }
 
   // Al subir el archivo, aplicamos:
@@ -45,10 +46,16 @@ const Tablas = () => {
     const filtrados = lowPassFilter(rawData, alpha)
 
     // 2) Detección
-    const { annotatedData, tablas, THRESH_OFF } = detectTablasYcortes(filtrados)
+    const { annotatedData, tablas: tablasDetectadas, THRESH_OFF } = detectTablasYcortes(filtrados)
 
-    setTableData(annotatedData)
-    setTablas(tablas)
+    // Añadir timestamp a cada fila
+    const annotatedDataWithTimestamp = annotatedData.map((row) => ({
+      ...row,
+      timestamp: parseHoraToTimestamp(row.hora)
+    }))
+
+    setTableData(annotatedDataWithTimestamp)
+    setTablas(tablasDetectadas)
     setUmbralOFF(THRESH_OFF)
   }
 
@@ -62,16 +69,15 @@ const Tablas = () => {
       }
 
       if (filters.timeFrom || filters.timeTo) {
-        const [h, m, s] = row.hora.split(':').map(Number)
-        const rowDate = new Date(1970, 0, 1, h, m, s || 0).getTime()
+        const rowTimestamp = row.timestamp * 1000 // Convertir a milisegundos
 
-        const [fromH, fromM, fromS = '0'] = (filters.timeFrom || '00:00:00').split(':')
-        const fromDate = new Date(1970, 0, 1, +fromH, +fromM, +fromS).getTime()
+        const fromTimestamp = filters.timeFrom ? parseHoraToTimestamp(filters.timeFrom) * 1000 : 0
 
-        const [toH, toM, toS = '59'] = (filters.timeTo || '23:59:59').split(':')
-        const toDate = new Date(1970, 0, 1, +toH, +toM, +toS).getTime()
+        const toTimestamp = filters.timeTo
+          ? parseHoraToTimestamp(filters.timeTo) * 1000
+          : 86400000 - 1 // 23:59:59 en milisegundos
 
-        matchesTimeRange = rowDate >= fromDate && rowDate <= toDate
+        matchesTimeRange = rowTimestamp >= fromTimestamp && rowTimestamp <= toTimestamp
       }
 
       return matchesDay && matchesTimeRange
@@ -106,8 +112,13 @@ const Tablas = () => {
           <SimpleLineChart data={filteredData} yKey="corriente" />
         </div>
         <div className="grafic-three">
-          {/* Otra vista de la corriente filtrada o tu preferencia */}
-          <SimpleLineChart data={filteredData} yKey="corrienteFiltrada" />
+          {/* Gráfico con anotaciones de tablas */}
+          <SimpleLineChart
+            data={filteredData}
+            yKey="corrienteFiltrada"
+            tablas={tablas}
+            annotate={true}
+          />
         </div>
       </div>
       <h2>Resumen de Tablas y Cortes</h2>
